@@ -6,7 +6,7 @@ interface DialogueBoxProps {
   dialogue: DialogueLine;
   onAdvance: () => void;
   isLastDialogue: boolean;
-  showChoices: boolean;
+  showChoices?: boolean;
 }
 
 export default function DialogueBox({ 
