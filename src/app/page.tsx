@@ -1,103 +1,148 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useGameState } from '@/hooks/useGameState';
+import MainMenu from '@/components/MainMenu';
+import GameScreen from '@/components/GameScreen';
+import EndingScreen from '@/components/EndingScreen';
+import SaveLoadMenu from '@/components/SaveLoadMenu';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const {
+    gameState,
+    currentScene,
+    isTransitioning,
+    startNewGame,
+    continueGame,
+    advanceDialogue,
+    makeChoice,
+    saveGame,
+    loadGame,
+    getSaves,
+    deleteSave,
+    returnToMenu,
+    restartGame,
+    canContinue,
+    characters,
+  } = useGameState();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const [showSaveMenu, setShowSaveMenu] = useState(false);
+  const [saveMenuMode, setSaveMenuMode] = useState<'save' | 'load'>('save');
+
+  const handleLoadGame = () => {
+    setSaveMenuMode('load');
+    setShowSaveMenu(true);
+  };
+
+  const handleSaveGame = () => {
+    setSaveMenuMode('save');
+    setShowSaveMenu(true);
+  };
+
+  // Handle keyboard shortcuts
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', (e) => {
+      if (gameState.gamePhase === 'playing' && currentScene) {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          if (!currentScene.choices || currentScene.choices.length === 0) {
+            advanceDialogue();
+          }
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          handleSaveGame();
+        }
+      }
+    });
+  }
+
+  // Render based on game phase
+  switch (gameState.gamePhase) {
+    case 'menu':
+      return (
+        <>
+          <MainMenu
+            onNewGame={startNewGame}
+            onContinue={continueGame}
+            onLoadGame={handleLoadGame}
+            canContinue={canContinue()}
+          />
+          {showSaveMenu && (
+            <SaveLoadMenu
+              saves={getSaves()}
+              onSave={saveGame}
+              onLoad={loadGame}
+              onDelete={deleteSave}
+              onClose={() => setShowSaveMenu(false)}
+              mode={saveMenuMode}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+          )}
+        </>
+      );
+
+    case 'playing':
+      if (!currentScene) return null;
+      return (
+        <>
+          <GameScreen
+            scene={currentScene}
+            dialogueIndex={gameState.currentDialogueIndex}
+            characters={characters}
+            onAdvance={advanceDialogue}
+            onChoice={makeChoice}
+            isTransitioning={isTransitioning}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+          {showSaveMenu && (
+            <SaveLoadMenu
+              saves={getSaves()}
+              onSave={saveGame}
+              onLoad={loadGame}
+              onDelete={deleteSave}
+              onClose={() => setShowSaveMenu(false)}
+              mode={saveMenuMode}
+            />
+          )}
+          {/* Quick Save/Load buttons */}
+          <div className="fixed top-4 left-4 flex gap-2">
+            <button
+              onClick={handleSaveGame}
+              className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg backdrop-blur-sm transition-colors"
+              title="Save Game (ESC)"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2" />
+              </svg>
+            </button>
+            <button
+              onClick={handleLoadGame}
+              className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg backdrop-blur-sm transition-colors"
+              title="Load Game"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </button>
+          </div>
+        </>
+      );
+
+    case 'ending':
+      // Find which character's ending we got
+      const endingCharacterId = Object.entries(gameState.relationships)
+        .sort(([,a], [,b]) => b - a)[0]?.[0];
+      
+      return (
+        <EndingScreen
+          characterId={endingCharacterId}
+          characters={characters}
+          relationships={gameState.relationships}
+          onReturnToMenu={returnToMenu}
+          onRestart={restartGame}
+        />
+      );
+
+    default:
+      return null;
+  }
 }
