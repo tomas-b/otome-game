@@ -2,7 +2,35 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { GameState, Scene, Choice, SaveGame } from '@/types/game';
-import { storyData, getEndingForCharacter } from '@/data/story';
+// Toggle between stories by changing this import
+// import { storyData, getEndingForCharacter } from '@/data/story';
+import { russianStoryData as storyData } from '@/data/russian-story';
+
+// Temporary getEndingForCharacter for Russian story
+function getEndingForCharacter(relationships: Record<string, number>): string {
+  const scores = Object.entries(relationships);
+  if (scores.length === 0) return 'neutral-ending';
+
+  const highest = scores.reduce((prev, current) =>
+    current[1] > prev[1] ? current : prev
+  );
+
+  if (highest[1] < 20) return 'neutral-ending';
+
+  // Map to Russian character endings
+  const endingMap: Record<string, string> = {
+    vladimir: 'vladimir-ending',
+    ilya: 'ilya-ending',
+    dobrynya: 'dobrynya-ending',
+    alyesha: 'alyesha-ending',
+    vassily: 'vassily-ending',
+    anika: 'anika-ending',
+    nikita: 'nikita-ending',
+    mikula: 'mikula-ending',
+  };
+
+  return endingMap[highest[0]] || 'neutral-ending';
+}
 
 const SAVE_KEY = 'otome-game-saves';
 const AUTO_SAVE_KEY = 'otome-game-autosave';
@@ -41,14 +69,24 @@ export function useGameState() {
       ...initialGameState,
       gamePhase: 'playing',
       relationships: {
-        akira: 0,
-        kazuki: 0,
-        haruto: 0,
+        vladimir: 0,
+        ilya: 0,
+        dobrynya: 0,
+        alyesha: 0,
+        vassily: 0,
+        anika: 0,
+        nikita: 0,
+        mikula: 0,
       },
       relationshipStats: {
-        akira: { affection: 20, trust: 75, suspicion: 0, lastInteraction: Date.now() }, // Childhood friend - high trust, some affection
-        kazuki: { affection: 0, trust: 0, suspicion: 50, lastInteraction: Date.now() }, // Mysterious - no trust, high suspicion
-        haruto: { affection: 5, trust: 30, suspicion: 0, lastInteraction: Date.now() }, // Gentle scholar - some baseline trust
+        vladimir: { affection: 0, trust: 0, suspicion: 30, lastInteraction: Date.now() }, // Powerful but troubled
+        ilya: { affection: 0, trust: 10, suspicion: 0, lastInteraction: Date.now() }, // Strong and protective
+        dobrynya: { affection: 0, trust: 20, suspicion: 0, lastInteraction: Date.now() }, // Diplomatic and wise
+        alyesha: { affection: 5, trust: 0, suspicion: 10, lastInteraction: Date.now() }, // Charming trickster
+        vassily: { affection: 0, trust: 0, suspicion: 20, lastInteraction: Date.now() }, // Arrogant youth
+        anika: { affection: 0, trust: 0, suspicion: 80, lastInteraction: Date.now() }, // Cursed and dangerous
+        nikita: { affection: 0, trust: 15, suspicion: 0, lastInteraction: Date.now() }, // Stoic protector
+        mikula: { affection: 10, trust: 30, suspicion: 0, lastInteraction: Date.now() }, // Gentle and lucky
       },
       dialogueHistory: [],
       storyFlags: {},

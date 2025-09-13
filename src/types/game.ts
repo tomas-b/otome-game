@@ -7,6 +7,10 @@ export interface Character {
   personality: string;
   color: string; // Color theme for the character
   portrait?: string; // URL to portrait image (optional)
+  portraits?: {
+    default: string;
+    [emotion: string]: string; // Additional emotion portraits
+  };
 }
 
 export interface Choice {
