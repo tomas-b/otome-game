@@ -99,8 +99,13 @@ export function useGameState() {
     const newRelationships = { ...gameState.relationships };
     if (choice.effects) {
       choice.effects.forEach(effect => {
-        newRelationships[effect.characterId] = 
-          (newRelationships[effect.characterId] || 0) + effect.points;
+        // Handle legacy points system
+        if (effect.points !== undefined) {
+          newRelationships[effect.characterId] =
+            (newRelationships[effect.characterId] || 0) + effect.points;
+        }
+        // Handle new multi-dimensional system
+        // TODO: Add support for affection, trust, suspicion
       });
     }
 
